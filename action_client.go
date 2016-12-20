@@ -6,9 +6,26 @@ import (
 	"net/http"
 	"bytes"
 	"encoding/json"
+	"github.com/Sirupsen/logrus"
+	"fmt"
 )
 
-type ActionClient struct {
+type ActionClient interface {
+	doAction(action string, entities witgo.EntityMap) (string, error)
+}
+
+type LoggingActionClient struct {}
+
+func (lc *LoggingActionClient) doAction(action string, entities witgo.EntityMap) (string, error) {
+	logrus.Infof("Action requested: %v", action)
+	return fmt.Sprintf("[Logged] Action requested: %v", action), nil
+}
+
+func NewLoggingActionClient() *LoggingActionClient {
+	return &LoggingActionClient{}
+}
+
+type RemoteActionClient struct {
 	c *http.Client
 	addressUrl string
 }
@@ -18,17 +35,22 @@ type ActionRequest struct {
 	entities witgo.EntityMap
 }
 
-func NewActionClient(addressUrl string) *ActionClient {
+type ActionResponse struct {
+	message string
+	e error
+}
+
+func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
 	// Set up a connection to the server.
 
 	client := &http.Client{}
-	return &ActionClient{
+	return &RemoteActionClient{
 		c: client,
 		addressUrl: addressUrl,
 	}
 }
 
-func (ac *ActionClient) doAction(action string, entities witgo.EntityMap) error {
+func (ac *RemoteActionClient) doAction(action string, entities witgo.EntityMap) (string, error) {
 
 	a := ActionRequest{name: action, entities: entities}
 	b := new(bytes.Buffer)
@@ -37,18 +59,22 @@ func (ac *ActionClient) doAction(action string, entities witgo.EntityMap) error 
 	request, err := http.NewRequest("POST", ac.addressUrl, b)
 
 	if (err != nil) {
-		return errors.Annotate(err, "Failed to construct remote action request")
+		return "", errors.Annotate(err, "Failed to construct remote action request")
 	}
 
 	response, err := ac.c.Do(request)
 
 	if (err != nil) {
-		return errors.Annotate(err, "Failed to invoke remote action")
+		return "", errors.Annotate(err, "Failed to invoke remote action")
 	}
 
 	if (response.StatusCode != http.StatusOK) {
-		return errors.Errorf("Failed to invoke action, response code is: %v", response.StatusCode)
+		return "", errors.Errorf("Failed to invoke action, response code is: %v", response.StatusCode)
 	}
 
-	return nil
+	ar := new(ActionResponse)
+
+	json.NewDecoder(response.Body).Decode(ar)
+
+	return ar.message, ar.e
 }

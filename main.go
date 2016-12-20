@@ -71,7 +71,18 @@ func watch(c *cli.Context) error {
 		return errors.Annotate(err, "Failed to initialize logging")
 	}
 
-	b, err := NewBridge(c.String("telegramtoken"), c.String("wittoken"))
+	var ac ActionClient
+
+	actionserver := c.String("actionserver")
+
+	if (actionserver == "") {
+		logrus.Infof("No action server specified, defaulting to logging only")
+		ac = NewLoggingActionClient()
+	} else {
+		ac = NewRemoteActionClient(actionserver)
+	}
+
+	b, err := NewBridge(c.String("telegramtoken"), c.String("wittoken"), ac)
 
 	if err != nil {
 		return errors.Annotate(err, "Failed to create bridge")
