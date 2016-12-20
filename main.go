@@ -76,8 +76,8 @@ func watch(c *cli.Context) error {
 	actionserver := c.String("actionserver")
 
 	if (actionserver == "") {
-		logrus.Infof("No action server specified, defaulting to logging only")
-		ac = NewLoggingActionClient()
+		logrus.Infof("No action server specified, defaulting to dummy actions")
+		ac = NewDummyActionClient()
 	} else {
 		ac = NewRemoteActionClient(actionserver)
 	}

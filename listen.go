@@ -5,17 +5,14 @@ import (
 	"github.com/kurrik/witgo/v1/witgo"
 	"github.com/juju/errors"
 	"github.com/Sirupsen/logrus"
-	"strconv"
-	"fmt"
-	"time"
 )
 
 type Bridge struct {
 	tgBotAPI *tgbotapi.BotAPI
 	witClient *witgo.Client
 	actionClient ActionClient
+	contexts map[int64]map[string]string
 }
-
 
 func NewBridge(tgKey string, witKey string, actionClient ActionClient) (*Bridge, error) {
 	bot, err := tgbotapi.NewBotAPI(tgKey)
@@ -31,7 +28,24 @@ func NewBridge(tgKey string, witKey string, actionClient ActionClient) (*Bridge,
 		tgBotAPI: bot,
 		witClient: witClient,
 		actionClient: actionClient,
+		contexts: make(map[int64]map[string]string),
 	}, nil
+}
+
+//todo: expire contexts
+func (b *Bridge) GetContext(chatId int64) map[string]string {
+	rv := b.contexts[chatId]
+
+	if rv == nil {
+		rv = make(map[string]string)
+		b.contexts[chatId] = rv
+	}
+
+	return rv
+}
+
+func (b *Bridge) SetContext(chatId int64, ctx map[string]string)  {
+	b.contexts[chatId] = ctx
 }
 
 func (b *Bridge) Start() error {
@@ -48,42 +62,14 @@ func (b *Bridge) Start() error {
 
 		logrus.Debugf("Received [%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		wResponse, err := Process(b.witClient, GetSession(&update), update.Message.Text)
+		chat := &Chat{b:b, chatId:update.Message.Chat.ID}
+		op := chat.Process(b.witClient, update.Message.Text)
 
-		if err != nil {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, err.Error())
-			//msg.ReplyToMessageID = update.Message.MessageID
-			b.tgBotAPI.Send(msg)
-		}
-
-		for _, op := range wResponse.ops {
-			switch op.(type) {
-			case WitgoAction:
-				msg, err := b.actionClient.doAction(string(op.(WitgoAction)), nil)
-				if err != nil {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Error: %v", err.Error()))
-					//msg.ReplyToMessageID = update.Message.MessageID
-					b.tgBotAPI.Send(msg)
-				} else {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, msg)
-					//msg.ReplyToMessageID = update.Message.MessageID
-					b.tgBotAPI.Send(msg)
-				}
-			case WitgoMessage:
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, op.(string))
-				//msg.ReplyToMessageID = update.Message.MessageID
-				b.tgBotAPI.Send(msg)
-			case WitgoMerge:
-				logrus.Infof("Merge: %v", op)
-			}
+		for op.Run(chat) {
+			op = chat.Process(b.witClient, "")
 		}
 	}
 
 	return nil
 }
 
-func GetSession(update *tgbotapi.Update) *witgo.Session {
-	sessionId := fmt.Sprintf("%v-%v", time.Now().Format("2006-01-02"), strconv.FormatInt(update.Message.Chat.ID, 10))
-	logrus.Debugf("SessionID: %v", sessionId)
-	return witgo.NewSession(witgo.SessionID(sessionId))
-}
