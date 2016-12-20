@@ -1,0 +1,10 @@
+version: '2'
+services:
+  bridge:
+#    build: .
+    command: go-wrapper run --wittoken ${WITTOKEN} --telegramtoken ${TELEGRAMTOKEN} --actionserver http://api:8080/runAction --loglevel DEBUG
+    image: "jpg0/wit-telegram"
+  api:
+    image: "jpg0/homeapi"
+#    ports:
+#      - "80:8080"
