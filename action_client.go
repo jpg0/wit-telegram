@@ -13,20 +13,20 @@ type ActionClient interface {
 }
 
 type RemoteActionClient struct {
-	c *http.Client
+	c          *http.Client
 	addressUrl string
 }
 
 type ActionRequest struct {
-	name string
-	entities witgo.EntityMap
-	context map[string]string
+	Name     string `json:"name,omitempty"`
+	Entities witgo.EntityMap `json:"entities,omitempty"`
+	Context  map[string]string `json:"context,omitempty"`
 }
 
 type ActionResponse struct {
-	message string
-	context map[string]string
-	e error
+	Message string `json:"message,omitempty"`
+	Context map[string]string `json:"context,omitempty"`
+	E       error `json:"error,omitempty"`
 }
 
 func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
