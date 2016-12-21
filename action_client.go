@@ -41,7 +41,7 @@ func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
 
 func (ac *RemoteActionClient) doAction(action string, entities witgo.EntityMap, ctx map[string]string) (map[string]string, error) {
 
-	a := ActionRequest{name: action, entities: entities}
+	a := ActionRequest{Name: action, Entities: entities}
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(a)
 
@@ -65,5 +65,5 @@ func (ac *RemoteActionClient) doAction(action string, entities witgo.EntityMap, 
 
 	json.NewDecoder(response.Body).Decode(ar)
 
-	return ar.context, ar.e
+	return ar.Context, ar.E
 }
