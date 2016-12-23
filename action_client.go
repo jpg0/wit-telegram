@@ -63,7 +63,7 @@ func (ac *RemoteActionClient) doAction(action string, entities witgo.EntityMap, 
 		ar := new(ActionResponse)
 		err = json.NewDecoder(response.Body).Decode(ar)
 
-		if err != nil {
+		if err == nil {
 			logrus.Errorf("Received remote error: %v", ar.E)
 		}
 

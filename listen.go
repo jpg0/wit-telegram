@@ -35,6 +35,10 @@ func NewBridge(tgKey string, witKey string, actionClient ActionClient) (*Bridge,
 	}, nil
 }
 
+func (b *Bridge) Reseed() {
+	b.sessionSeed = time.Now().UnixNano()
+}
+
 //todo: expire contexts
 func (b *Bridge) GetContext(chatId int64) map[string]string {
 	rv := b.contexts[chatId]
@@ -70,7 +74,15 @@ func (b *Bridge) Start() error {
 
 		opClient := NewCachingOperationClient(chat)
 
-		for op.Run(opClient) {
+		for cont, opError := op.Run(opClient);; {
+			if opError != nil {
+				b.Reseed() //discard now-broken wit.ai sessions
+			}
+
+			if !cont {
+				break
+			}
+
 			op = chat.Process(b.witClient, "")
 		}
 	}
