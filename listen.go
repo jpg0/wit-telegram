@@ -62,7 +62,7 @@ func (b *Bridge) Start() error {
 
 		logrus.Debugf("Received [%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		chat := &Chat{b:b, chatId:update.Message.Chat.ID}
+		chat := NewChat(b, update.Message.Chat.ID)
 		op := chat.Process(b.witClient, update.Message.Text)
 
 		opClient := NewCachingOperationClient(chat)
