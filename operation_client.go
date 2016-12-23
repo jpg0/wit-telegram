@@ -26,6 +26,7 @@ func (coc *CachingOperationClient) DoAction(name string, entities witgo.EntityMa
 		logrus.Errorf("Detected repeated action call to %v. Aborting.", name)
 		return errors.Errorf("Repeated action call to %v", name)
 	} else {
+		logrus.Debugf("Running (new) remote action %v", name)
 		coc.name = name
 		coc.entities = entities
 		return coc.next.DoAction(name, entities)
