@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kurrik/witgo/v1/witgo"
+	"github.com/jpg0/witgo/v1/witgo"
 	"github.com/juju/errors"
 	"net/http"
 	"bytes"

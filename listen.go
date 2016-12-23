@@ -2,7 +2,7 @@ package main
 
 import (
 	"gopkg.in/telegram-bot-api.v4"
-	"github.com/kurrik/witgo/v1/witgo"
+	"github.com/jpg0/witgo/v1/witgo"
 	"github.com/juju/errors"
 	"github.com/Sirupsen/logrus"
 )
@@ -65,11 +65,12 @@ func (b *Bridge) Start() error {
 		chat := &Chat{b:b, chatId:update.Message.Chat.ID}
 		op := chat.Process(b.witClient, update.Message.Text)
 
-		for op.Run(chat) {
+		opClient := NewCachingOperationClient(chat)
+
+		for op.Run(opClient) {
 			op = chat.Process(b.witClient, "")
 		}
 	}
 
 	return nil
 }
-

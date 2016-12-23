@@ -2,19 +2,15 @@ package main
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/kurrik/witgo/v1/witgo"
+	"github.com/jpg0/witgo/v1/witgo"
 	"strings"
 	"encoding/json"
 	"gopkg.in/telegram-bot-api.v4"
 	"fmt"
 	"time"
 	"strconv"
+	"github.com/juju/errors"
 )
-
-type OperationClient interface {
-	SendMessage(text string)
-	DoAction(name string, entities witgo.EntityMap)
-}
 
 type Chat struct {
 	b *Bridge
@@ -25,14 +21,16 @@ func (c *Chat) SendMessage(text string) {
 	msg := tgbotapi.NewMessage(c.chatId, text)
 	c.b.tgBotAPI.Send(msg)}
 
-func (c *Chat) DoAction(name string, entities witgo.EntityMap) {
+func (c *Chat) DoAction(name string, entities witgo.EntityMap) error {
 	ctx := c.b.GetContext(c.chatId)
 	newCtx, err := c.b.actionClient.doAction(name, entities, ctx)
 
 	if err != nil {
-		logrus.Errorf("Action failed: ", err)
+		return errors.Annotate(err, "Action failed")
 	} else {
+		logrus.Debugf("Setting context to: %+v", newCtx)
 		c.b.SetContext(c.chatId, newCtx)
+		return nil
 	}
 }
 
@@ -47,10 +45,8 @@ func (c *Chat) GetContext() map[string]string {
 }
 
 func (c *Chat) Process(client *witgo.Client, q string) WitOperation {
-	var (
-		response *witgo.Response
-		converse *witgo.ConverseResponse
-	)
+
+	var converse *witgo.ConverseResponse
 
 	logrus.Debugf("Calling Wit.ai...")
 
