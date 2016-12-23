@@ -74,7 +74,9 @@ func (b *Bridge) Start() error {
 
 		opClient := NewCachingOperationClient(chat)
 
-		for cont, opError := op.Run(opClient);; {
+		for {
+			cont, opError := op.Run(opClient)
+
 			if opError != nil {
 				b.Reseed() //discard now-broken wit.ai sessions
 			}
