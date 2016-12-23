@@ -15,7 +15,13 @@ type WitAction struct {
 }
 
 func (op *WitAction) Run(oc OperationClient) bool {
-	oc.DoAction(op.name, op.entityMap)
+	err := oc.DoAction(op.name, op.entityMap)
+
+	if err != nil {
+		logrus.Errorf("Failed to run action: %v", err)
+		return false
+	}
+
 	return true
 }
 

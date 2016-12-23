@@ -33,7 +33,7 @@ func main() {
 			Value: "info",
 		},
 	}
-	app.Action = verbose(watch)
+	app.Action = verbose(ConfigureAndStart)
 	app.Run(os.Args)
 }
 
@@ -63,7 +63,7 @@ func initLogging(level string) error {
 	return nil
 }
 
-func watch(c *cli.Context) error {
+func ConfigureAndStart(c *cli.Context) error {
 
 	err := initLogging(c.String("loglevel"))
 
