@@ -15,14 +15,12 @@ import (
 type Chat struct {
 	b *Bridge
 	chatId int64
-	sessionSeed int64
 }
 
 func NewChat(b *Bridge, chatId int64) *Chat {
 	return &Chat {
 		b:b,
 		chatId:chatId,
-		sessionSeed: time.Now().UnixNano(),
 	}
 }
 
@@ -44,7 +42,7 @@ func (c *Chat) DoAction(name string, entities witgo.EntityMap) error {
 }
 
 func (c *Chat) GetSessionId() string {
-	sessionId := fmt.Sprintf("%v-%v-%v", c.sessionSeed, time.Now().Format("2006-01-02"), strconv.FormatInt(c.chatId, 10))
+	sessionId := fmt.Sprintf("%v-%v-%v", c.b.sessionSeed, time.Now().Format("2006-01-02"), strconv.FormatInt(c.chatId, 10))
 	logrus.Debugf("SessionID: %v", sessionId)
 	return sessionId
 }

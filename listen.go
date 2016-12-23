@@ -5,6 +5,7 @@ import (
 	"github.com/jpg0/witgo/v1/witgo"
 	"github.com/juju/errors"
 	"github.com/Sirupsen/logrus"
+	"time"
 )
 
 type Bridge struct {
@@ -12,6 +13,7 @@ type Bridge struct {
 	witClient *witgo.Client
 	actionClient ActionClient
 	contexts map[int64]map[string]string
+	sessionSeed int64
 }
 
 func NewBridge(tgKey string, witKey string, actionClient ActionClient) (*Bridge, error) {
@@ -29,6 +31,7 @@ func NewBridge(tgKey string, witKey string, actionClient ActionClient) (*Bridge,
 		witClient: witClient,
 		actionClient: actionClient,
 		contexts: make(map[int64]map[string]string),
+		sessionSeed: time.Now().UnixNano(),
 	}, nil
 }
 
