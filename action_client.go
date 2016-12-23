@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"bytes"
 	"encoding/json"
+	"github.com/Sirupsen/logrus"
 )
 
 type ActionClient interface {
@@ -58,11 +59,18 @@ func (ac *RemoteActionClient) doAction(action string, entities witgo.EntityMap, 
 	}
 
 	if (response.StatusCode != http.StatusOK) {
+
+		ar := new(ActionResponse)
+		err = json.NewDecoder(response.Body).Decode(ar)
+
+		if err != nil {
+			logrus.Errorf("Received remote error: %v", ar.E)
+		}
+
 		return nil, errors.Errorf("Failed to invoke action, response code is: %v", response.StatusCode)
 	}
 
 	ar := new(ActionResponse)
-
 	json.NewDecoder(response.Body).Decode(ar)
 
 	return ar.Context, ar.E
