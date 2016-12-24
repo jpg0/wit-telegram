@@ -32,6 +32,7 @@ type WitMessage struct {
 }
 
 func (op *WitMessage) Run(oc OperationClient) (bool, error) {
+	logrus.Debugf("Returning message: %v", op.text)
 	oc.SendMessage(op.text)
 	return true, nil
 }
@@ -49,6 +50,7 @@ type WitStop struct {
 }
 
 func (op *WitStop) Run(oc OperationClient) (bool, error) {
+	logrus.Debugf("Stopping op chain")
 	return false, nil
 }
 
@@ -57,6 +59,6 @@ type WitError struct {
 }
 
 func (op *WitError) Run(oc OperationClient) (bool, error) {
-	logrus.Error(op.message)
+	logrus.Errorf("WitError: %v", op.message)
 	return false, nil
 }
