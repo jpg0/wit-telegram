@@ -1,13 +1,12 @@
 package main
 
 import (
-	"github.com/jpg0/witgo/v1/witgo"
 	"github.com/Sirupsen/logrus"
 )
 
 type DummyActionClient struct {}
 
-func (lc *DummyActionClient) doAction(action string, entities witgo.EntityMap, ctx map[string]string) (map[string]string, error) {
+func (lc *DummyActionClient) doAction(action string, ctx map[string]string) (map[string]string, error) {
 	logrus.Infof("Action requested: %v", action)
 
 	switch action {

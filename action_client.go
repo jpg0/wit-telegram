@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jpg0/witgo/v1/witgo"
+	//"github.com/jpg0/witgo/v1/witgo"
 	"github.com/juju/errors"
 	"net/http"
 	"bytes"
@@ -10,7 +10,7 @@ import (
 )
 
 type ActionClient interface {
-	doAction(action string, entities witgo.EntityMap, context map[string]string) (map[string]string, error)
+	doAction(action string, context map[string]string) (map[string]string, error)
 }
 
 type RemoteActionClient struct {
@@ -20,7 +20,6 @@ type RemoteActionClient struct {
 
 type ActionRequest struct {
 	Name     string `json:"name,omitempty"`
-	Entities witgo.EntityMap `json:"entities,omitempty"`
 	Context  map[string]string `json:"context,omitempty"`
 }
 
@@ -40,9 +39,9 @@ func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
 	}
 }
 
-func (ac *RemoteActionClient) doAction(action string, entities witgo.EntityMap, ctx map[string]string) (map[string]string, error) {
+func (ac *RemoteActionClient) doAction(action string, ctx map[string]string) (map[string]string, error) {
 
-	a := ActionRequest{Name: action, Entities: entities}
+	a := ActionRequest{Name: action, Context: ctx}
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(a)
 

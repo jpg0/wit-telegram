@@ -51,8 +51,28 @@ func (b *Bridge) GetContext(chatId int64) map[string]string {
 	return rv
 }
 
-func (b *Bridge) SetContext(chatId int64, ctx map[string]string)  {
-	b.contexts[chatId] = ctx
+func (b *Bridge) MergeEntitiesToContext(chatId int64, entitiyMap witgo.EntityMap) map[string]string {
+	ctx := b.GetContext(chatId)
+
+	for key := range entitiyMap {
+		val, err := entitiyMap.FirstEntityValue(key)
+
+		if err == nil {
+			ctx[key] = val
+		}
+	}
+
+	return ctx
+}
+
+func (b *Bridge) MergeContext(chatId int64, newCtx map[string]string) map[string]string {
+	ctx := b.GetContext(chatId)
+
+	for key := range newCtx {
+		ctx[key] = newCtx[key]
+	}
+
+	return ctx
 }
 
 func (b *Bridge) Start() error {

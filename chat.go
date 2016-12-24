@@ -29,14 +29,14 @@ func (c *Chat) SendMessage(text string) {
 	c.b.tgBotAPI.Send(msg)}
 
 func (c *Chat) DoAction(name string, entities witgo.EntityMap) error {
-	ctx := c.b.GetContext(c.chatId)
-	newCtx, err := c.b.actionClient.doAction(name, entities, ctx)
+	ctx := c.b.MergeEntitiesToContext(c.chatId, entities)
+	newCtx, err := c.b.actionClient.doAction(name, ctx)
 
 	if err != nil {
 		return errors.Annotate(err, "Action failed")
 	} else {
 		logrus.Debugf("Setting context to: %+v", newCtx)
-		c.b.SetContext(c.chatId, newCtx)
+		c.b.MergeContext(c.chatId, newCtx)
 		return nil
 	}
 }
