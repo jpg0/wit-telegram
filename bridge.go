@@ -69,10 +69,12 @@ func (b *Bridge) UpdateContext(chatId int64, addCtx map[string]string, rmCtx []s
 	ctx := b.GetContext(chatId)
 
 	for _, key := range rmCtx {
+		logrus.Debugf("Removing %v from context", key)
 		delete(ctx, key)
 	}
 
 	for key, value := range addCtx {
+		logrus.Debugf("Adding %v as %v to context", key, value)
 		ctx[key] = value
 	}
 
