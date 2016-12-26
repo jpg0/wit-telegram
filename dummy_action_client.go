@@ -6,18 +6,20 @@ import (
 
 type DummyActionClient struct {}
 
-func (lc *DummyActionClient) doAction(action string, ctx map[string]string) (map[string]string, error) {
+func (lc *DummyActionClient) doAction(action string, newCtx map[string]string, ctx map[string]string) (map[string]string, []string, error) {
 	logrus.Infof("Action requested: %v", action)
+
+	addCtx := make(map[string]string)
 
 	switch action {
 	case "restart":
-		ctx["restarting"] = "dummy server"
+		addCtx["restarting"] = "dummy server"
 	case "list":
-		ctx["period"] = "10"
-		ctx["data"] = "some thing\nsomething else"
+		addCtx["period"] = "10"
+		addCtx["data"] = "some thing\nsomething else"
 	}
 
-	return ctx, nil
+	return addCtx, []string{}, nil
 }
 
 func NewDummyActionClient() *DummyActionClient {

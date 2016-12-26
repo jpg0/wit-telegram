@@ -16,7 +16,7 @@ type WitAction struct {
 }
 
 func (op *WitAction) Run(oc OperationClient) (bool, error) {
-	err := oc.DoAction(op.name, op.entityMap)
+	err := oc.DoAction(op.name, ToMap(op.entityMap))
 
 	if err != nil {
 		logrus.Errorf("Failed to run action: %v", err)
@@ -61,4 +61,18 @@ type WitError struct {
 func (op *WitError) Run(oc OperationClient) (bool, error) {
 	logrus.Errorf("WitError: %v", op.message)
 	return false, nil
+}
+
+func ToMap(em witgo.EntityMap) map[string]string {
+	ctx := make(map[string]string)
+
+	for key := range em {
+		val, err := em.FirstEntityValue(key)
+
+		if err == nil {
+			ctx[key] = val
+		}
+	}
+
+	return ctx
 }
