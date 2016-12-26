@@ -7,7 +7,7 @@ import (
 )
 
 type OperationClient interface {
-	SendMessage(text string)
+	SendMessage(text string, responses []string)
 	DoAction(name string, newCtx map[string]string) error
 }
 
@@ -17,8 +17,8 @@ type CachingOperationClient struct {
 	next OperationClient
 }
 
-func (coc *CachingOperationClient) SendMessage(text string) {
-	coc.next.SendMessage(text)
+func (coc *CachingOperationClient) SendMessage(text string, responses []string) {
+	coc.next.SendMessage(text, responses)
 }
 func (coc *CachingOperationClient) DoAction(name string, newCtx map[string]string) error {
 	if coc.name == name && reflect.DeepEqual(coc.newCtx, newCtx) {

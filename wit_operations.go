@@ -20,7 +20,7 @@ func (op *WitAction) Run(oc OperationClient) (bool, error) {
 
 	if err != nil {
 		logrus.Errorf("Failed to run action: %v", err)
-		oc.SendMessage(fmt.Sprintf("Failed to run action: %v", err))
+		oc.SendMessage(fmt.Sprintf("Failed to run action: %v", err), nil)
 		return false, err
 	}
 
@@ -29,11 +29,12 @@ func (op *WitAction) Run(oc OperationClient) (bool, error) {
 
 type WitMessage struct {
 	text string
+	responses []string
 }
 
 func (op *WitMessage) Run(oc OperationClient) (bool, error) {
 	logrus.Debugf("Returning message: %v", op.text)
-	oc.SendMessage(op.text)
+	oc.SendMessage(op.text, op.responses)
 	return true, nil
 }
 

@@ -24,8 +24,22 @@ func NewChat(b *Bridge, chatId int64) *Chat {
 	}
 }
 
-func (c *Chat) SendMessage(text string) {
+func (c *Chat) SendMessage(text string, responses []string) {
 	msg := tgbotapi.NewMessage(c.chatId, text)
+
+	if responses != nil {
+		rows := make([]tgbotapi.KeyboardButton, len(responses))
+
+		for i, response := range responses {
+			rows[i] = tgbotapi.NewKeyboardButton(response)
+		}
+
+		kb := tgbotapi.NewReplyKeyboard(rows)
+		kb.OneTimeKeyboard = true
+
+		msg.ReplyMarkup = kb
+	}
+
 	c.b.tgBotAPI.Send(msg)}
 
 func (c *Chat) DoAction(name string, newCtx map[string]string) error {
@@ -78,7 +92,7 @@ func (c *Chat) Process(client *witgo.Client, q string) WitOperation {
 	case "action":
 		return &WitAction{name: converse.Action, entityMap:converse.Entities}
 	case "msg":
-		return &WitMessage{text:converse.Msg}
+		return &WitMessage{text:converse.Msg, responses:converse.QuickReplies}
 	case "merge":
 		return &WitMerge{entityMap:converse.Entities}
 	case "stop":
