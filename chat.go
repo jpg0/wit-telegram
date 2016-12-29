@@ -10,37 +10,55 @@ import (
 	"time"
 	"strconv"
 	"github.com/juju/errors"
+	"net/url"
 )
 
 type Chat struct {
-	b *Bridge
+	b      *Bridge
 	chatId int64
 }
 
 func NewChat(b *Bridge, chatId int64) *Chat {
-	return &Chat {
+	return &Chat{
 		b:b,
 		chatId:chatId,
 	}
 }
 
 func (c *Chat) SendMessage(text string, responses []string) {
-	msg := tgbotapi.NewMessage(c.chatId, text)
 
-	if responses != nil {
-		rows := make([]tgbotapi.KeyboardButton, len(responses))
+	var msg tgbotapi.Chattable
+	u, e := url.Parse(text)
 
-		for i, response := range responses {
-			rows[i] = tgbotapi.NewKeyboardButton(response)
+	if e != nil && u.IsAbs() && imageSuffix(u.Path) {
+		msg = tgbotapi.NewPhotoUpload(c.chatId, u)
+	} else {
+		msg = tgbotapi.NewMessage(c.chatId, text)
+
+		if responses != nil {
+			rows := make([]tgbotapi.KeyboardButton, len(responses))
+
+			for i, response := range responses {
+				rows[i] = tgbotapi.NewKeyboardButton(response)
+			}
+
+			kb := tgbotapi.NewReplyKeyboard(rows)
+			kb.OneTimeKeyboard = true
+
+			msg.(*tgbotapi.MessageConfig).ReplyMarkup = kb
 		}
-
-		kb := tgbotapi.NewReplyKeyboard(rows)
-		kb.OneTimeKeyboard = true
-
-		msg.ReplyMarkup = kb
 	}
 
-	c.b.tgBotAPI.Send(msg)}
+	c.b.tgBotAPI.Send(msg)
+}
+
+func imageSuffix(casedPath string) bool {
+	path := strings.ToLower(casedPath)
+
+	return strings.HasSuffix(path, ".jpg") ||
+		strings.HasSuffix(path, ".png") ||
+		strings.HasSuffix(path, ".gif")
+}
 
 func (c *Chat) DoAction(name string, newCtx map[string]string) error {
 	ctx := c.b.GetContext(c.chatId)
@@ -72,7 +90,7 @@ func (c *Chat) Process(client *witgo.Client, q string) WitOperation {
 
 	logrus.Debugf("Calling Wit.ai...")
 
-	response, err := client.Converse(witgo.SessionID(c.GetSessionId()), q, c. GetContext())
+	response, err := client.Converse(witgo.SessionID(c.GetSessionId()), q, c.GetContext())
 
 	if err != nil {
 		logrus.Errorf("Failed to call Wit.ai: ", err)
