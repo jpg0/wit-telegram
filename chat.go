@@ -58,6 +58,9 @@ func (c *Chat) SendMessage(text string, responses []string) {
 func toPhotoUpload(chatId int64, url *url.URL) tgbotapi.PhotoConfig {
 
 	if url.Scheme == "data" {
+
+		logrus.Debugf("Detected data URL, extracting data")
+
 		dataUrl, err := dataurl.DecodeString(url.String())
 
 		if err == nil {
@@ -66,6 +69,8 @@ func toPhotoUpload(chatId int64, url *url.URL) tgbotapi.PhotoConfig {
 				&tgbotapi.FileBytes{
 					Bytes: dataUrl.Data,
 				})
+		} else {
+			logrus.Errorf("Failed extracting data from URI: %v", err)
 		}
 
 	}
