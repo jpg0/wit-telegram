@@ -34,7 +34,7 @@ func (c *Chat) SendMessage(text string, responses []string) {
 	if e != nil && u.IsAbs() && imageSuffix(u.Path) {
 		msg = toPhotoUpload(c.chatId, u)
 	} else {
-		msg = tgbotapi.NewMessage(c.chatId, text)
+		mc := tgbotapi.NewMessage(c.chatId, text)
 
 		if responses != nil {
 			rows := make([]tgbotapi.KeyboardButton, len(responses))
@@ -46,8 +46,10 @@ func (c *Chat) SendMessage(text string, responses []string) {
 			kb := tgbotapi.NewReplyKeyboard(rows)
 			kb.OneTimeKeyboard = true
 
-			msg.(tgbotapi.MessageConfig).ReplyMarkup = kb
+			mc.ReplyMarkup = kb
 		}
+
+		msg = mc
 	}
 
 	c.b.tgBotAPI.Send(msg)
