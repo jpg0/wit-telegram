@@ -43,6 +43,10 @@ func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
 
 func (ac *RemoteActionClient) doAction(action string, newCtx map[string]string, ctx map[string]string) (map[string]string, []string, error) {
 
+	if action == "reset" {
+		return resetAction(ctx)
+	}
+
 	a := ActionRequest{Name: action, NewContext: newCtx, Context: ctx}
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(a)
@@ -75,4 +79,14 @@ func (ac *RemoteActionClient) doAction(action string, newCtx map[string]string, 
 	json.NewDecoder(response.Body).Decode(ar)
 
 	return ar.AddContext, ar.RemoveContext, ar.E
+}
+
+func resetAction(ctx map[string]string) (map[string]string, []string, error) {
+	toRemove := make([]string, len(ctx))
+
+	for k := range ctx {
+		toRemove = append(toRemove, k)
+	}
+
+	return nil, toRemove, nil
 }
