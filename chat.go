@@ -31,7 +31,7 @@ func (c *Chat) SendMessage(text string, responses []string) {
 	var msg tgbotapi.Chattable
 	u, e := url.Parse(text)
 
-	if e != nil && u.IsAbs() && imageSuffix(u.Path) {
+	if e != nil && ((u.IsAbs() && imageSuffix(u.Path)) || u.Scheme == "data" ) {
 		msg = toPhotoUpload(c.chatId, u)
 	} else {
 		mc := tgbotapi.NewMessage(c.chatId, text)
