@@ -46,7 +46,7 @@ func (c *Chat) SendMessage(text string, responses []string) {
 			kb := tgbotapi.NewReplyKeyboard(rows)
 			kb.OneTimeKeyboard = true
 
-			msg.(*tgbotapi.MessageConfig).ReplyMarkup = kb
+			msg.(tgbotapi.MessageConfig).ReplyMarkup = kb
 		}
 	}
 
