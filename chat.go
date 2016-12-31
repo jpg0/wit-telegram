@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"github.com/juju/errors"
 	"net/url"
+	"github.com/vincent-petithory/dataurl"
 )
 
 type Chat struct {
@@ -31,7 +32,7 @@ func (c *Chat) SendMessage(text string, responses []string) {
 	u, e := url.Parse(text)
 
 	if e != nil && u.IsAbs() && imageSuffix(u.Path) {
-		msg = tgbotapi.NewPhotoUpload(c.chatId, u)
+		msg = toPhotoUpload(c.chatId, u)
 	} else {
 		msg = tgbotapi.NewMessage(c.chatId, text)
 
@@ -50,6 +51,24 @@ func (c *Chat) SendMessage(text string, responses []string) {
 	}
 
 	c.b.tgBotAPI.Send(msg)
+}
+
+func toPhotoUpload(chatId int64, url *url.URL) tgbotapi.PhotoConfig {
+
+	if url.Scheme == "data" {
+		dataUrl, err := dataurl.DecodeString(url.String())
+
+		if err == nil {
+			return tgbotapi.NewPhotoUpload(
+				chatId,
+				&tgbotapi.FileBytes{
+					Bytes: dataUrl.Data,
+				})
+		}
+
+	}
+
+	return tgbotapi.NewPhotoUpload(chatId, url)
 }
 
 func imageSuffix(casedPath string) bool {
