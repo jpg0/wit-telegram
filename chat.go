@@ -88,14 +88,14 @@ func imageSuffix(casedPath string) bool {
 
 func (c *Chat) DoAction(name string, newCtx map[string]string) error {
 	ctx := c.b.GetContext(c.chatId)
-	addCtx, rmCtx, err := c.b.actionClient.doAction(name, newCtx, ctx)
+	updater, err := c.b.actionClient.doAction(name, newCtx, ctx)
 
 	if err != nil {
 		return errors.Annotate(err, "Action failed")
 	} else {
-		logrus.Debugf("Removing context: %+v", rmCtx)
-		logrus.Debugf("Adding context: %+v", addCtx)
-		c.b.UpdateContext(c.chatId, addCtx, rmCtx)
+		//logrus.Debugf("Removing context: %+v", rmCtx)
+		//logrus.Debugf("Adding context: %+v", addCtx)
+		c.b.UpdateContext(c.chatId, updater)
 		return nil
 	}
 }

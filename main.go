@@ -76,8 +76,7 @@ func ConfigureAndStart(c *cli.Context) error {
 	actionserver := c.String("actionserver")
 
 	if (actionserver == "") {
-		logrus.Infof("No action server specified, defaulting to dummy actions")
-		ac = NewDummyActionClient()
+		panic("No action server specified")
 	} else {
 		ac = NewRemoteActionClient(actionserver)
 	}

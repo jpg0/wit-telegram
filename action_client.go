@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"github.com/jpg0/witgo/v1/witgo"
 	"github.com/juju/errors"
 	"net/http"
 	"bytes"
@@ -10,7 +9,7 @@ import (
 )
 
 type ActionClient interface {
-	doAction(action string, newContext map[string]string, context map[string]string) (map[string]string, []string, error)
+	doAction(action string, newContext map[string]string, context map[string]string) (func (map[string]string), error)
 }
 
 type RemoteActionClient struct {
@@ -29,6 +28,7 @@ type ActionResponse struct {
 	AddContext map[string]string `json:"addcontext,omitempty"`
 	RemoveContext []string `json:"removecontext,omitempty"`
 	E       error `json:"error,omitempty"`
+	ReplaceContext map[string]string `json:"replacecontext,omitempty"`
 }
 
 func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
@@ -41,7 +41,7 @@ func NewRemoteActionClient(addressUrl string) *RemoteActionClient {
 	}
 }
 
-func (ac *RemoteActionClient) doAction(action string, newCtx map[string]string, ctx map[string]string) (map[string]string, []string, error) {
+func (ac *RemoteActionClient) doAction(action string, newCtx map[string]string, ctx map[string]string) (func(map[string]string), error) {
 
 	if action == "reset" {
 		return resetAction(ctx)
@@ -54,13 +54,13 @@ func (ac *RemoteActionClient) doAction(action string, newCtx map[string]string, 
 	request, err := http.NewRequest("POST", ac.addressUrl, b)
 
 	if (err != nil) {
-		return nil, nil, errors.Annotate(err, "Failed to construct remote action request")
+		return nil, errors.Annotate(err, "Failed to construct remote action request")
 	}
 
 	response, err := ac.c.Do(request)
 
 	if (err != nil) {
-		return nil, nil, errors.Annotate(err, "Failed to invoke remote action")
+		return nil, errors.Annotate(err, "Failed to invoke remote action")
 	}
 
 	if (response.StatusCode != http.StatusOK) {
@@ -72,21 +72,43 @@ func (ac *RemoteActionClient) doAction(action string, newCtx map[string]string, 
 			logrus.Errorf("Received remote error: %v", ar.E)
 		}
 
-		return nil, nil, errors.Errorf("Failed to invoke action, response code is: %v", response.StatusCode)
+		return nil, errors.Errorf("Failed to invoke action, response code is: %v", response.StatusCode)
 	}
 
 	ar := new(ActionResponse)
 	json.NewDecoder(response.Body).Decode(ar)
 
-	return ar.AddContext, ar.RemoveContext, ar.E
+	return func(toUpdate map[string]string){
+		if ar.ReplaceContext != nil {
+			logrus.Debugf("Replacing context")
+
+			for k := range toUpdate {
+				logrus.Debugf("Removing %v", k)
+				delete(toUpdate, k)
+			}
+			for k, v := range ar.ReplaceContext {
+				logrus.Debugf("Adding %v = %v", k, v)
+				toUpdate[k] = v
+			}
+		} else {
+			logrus.Debugf("Updating context")
+
+			for _, k := range ar.RemoveContext {
+				logrus.Debugf("Removing %v", k)
+				delete(toUpdate, k)
+			}
+			for k,v := range ar.AddContext {
+				logrus.Debugf("Adding %v = %v", k, v)
+				toUpdate[k] = v
+			}
+		}
+	}, nil
 }
 
-func resetAction(ctx map[string]string) (map[string]string, []string, error) {
-	toRemove := make([]string, len(ctx))
-
-	for k := range ctx {
-		toRemove = append(toRemove, k)
-	}
-
-	return nil, toRemove, nil
+func resetAction(ctx map[string]string) (func(map[string]string), error) {
+	return func(toUpdate map[string]string) {
+		for k := range ctx {
+			delete(toUpdate, k)
+		}
+	}, nil
 }

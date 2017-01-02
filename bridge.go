@@ -65,18 +65,20 @@ func (b *Bridge) GetContext(chatId int64) map[string]string {
 //	return ctx
 //}
 
-func (b *Bridge) UpdateContext(chatId int64, addCtx map[string]string, rmCtx []string) map[string]string {
+func (b *Bridge) UpdateContext(chatId int64, updater func(map[string]string)) map[string]string {
 	ctx := b.GetContext(chatId)
 
-	for _, key := range rmCtx {
-		logrus.Debugf("Removing %v from context", key)
-		delete(ctx, key)
-	}
+	updater(ctx)
 
-	for key, value := range addCtx {
-		logrus.Debugf("Adding %v as %v to context", key, value)
-		ctx[key] = value
-	}
+	//for _, key := range rmCtx {
+	//	logrus.Debugf("Removing %v from context", key)
+	//	delete(ctx, key)
+	//}
+	//
+	//for key, value := range addCtx {
+	//	logrus.Debugf("Adding %v as %v to context", key, value)
+	//	ctx[key] = value
+	//}
 
 	return ctx
 }
